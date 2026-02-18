@@ -1,0 +1,36 @@
+flowchart TD
+    A([Start]) --> B[User visits App]
+    B --> C{Already have an account?}
+    
+    C -->|No| D[Sign Up]
+    C -->|Yes| E[Log In]
+    
+    D --> F[Go to Dashboard]
+    E --> F
+
+    F --> G{What do you want to do?}
+
+    G -->|Add Expenses| H[Add Expense Manually\nor Upload CSV File]
+    G -->|View Reports| M[View Dashboard & Analytics]
+    G -->|Check Alerts| P[View Suspicious Transactions]
+
+    H --> I{Expenses Added Successfully?}
+    I -->|No - Error| J[Show Validation Error\nAsk User to Fix]
+    J --> H
+    I -->|Yes| K[Expenses Saved]
+    K --> L[Auto-categorized &\nRisk Scored in Background]
+    L --> F
+
+    M --> N[See Spending by Category\nForecast vs Actual\nOverspending Risk Level]
+    N --> O{Need to filter?}
+    O -->|Yes| O1[Filter by Date / Category / Risk]
+    O1 --> N
+    O -->|No| F
+
+    P --> Q[See Flagged Transactions\nwith Risk Level: Low / Medium / High]
+    Q --> R{Take Action?}
+    R -->|Mark as Reviewed| S[Transaction Marked Safe]
+    R -->|Ignore| F
+    S --> F
+
+    F --> T([End / Stay on Dashboard])
