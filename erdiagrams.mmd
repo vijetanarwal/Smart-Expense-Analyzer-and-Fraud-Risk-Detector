@@ -1,0 +1,61 @@
+erDiagram
+
+    USERS {
+        UUID id PK
+        VARCHAR email
+        VARCHAR password_hash
+        TIMESTAMP created_at
+    }
+
+    TRANSACTIONS {
+        UUID id PK
+        UUID user_id FK
+        FLOAT amount
+        VARCHAR merchant_name
+        VARCHAR payment_type
+        INT installments
+        FLOAT freight_value
+        TIMESTAMP transaction_date
+        VARCHAR predicted_category
+        FLOAT fraud_score
+        VARCHAR risk_level
+        TIMESTAMP created_at
+    }
+
+    MONTHLY_FORECASTS {
+        UUID id PK
+        UUID user_id FK
+        DATE month
+        FLOAT actual_spend
+        FLOAT predicted_spend
+        VARCHAR overspending_risk
+        TIMESTAMP created_at
+    }
+
+    CATEGORY_AGGREGATES {
+        UUID id PK
+        UUID user_id FK
+        VARCHAR category
+        FLOAT total_amount
+        DATE month
+    }
+
+    BATCH_JOBS {
+        UUID id PK
+        UUID uploaded_by FK
+        VARCHAR file_name
+        VARCHAR status
+        INT total_records
+        INT processed_records
+        TIMESTAMP created_at
+    }
+
+    BATCH_RESULTS {
+        UUID id PK
+        UUID batch_id FK
+        UUID transaction_id FK
+        FLOAT fraud_score
+        VARCHAR risk_level
+    }
+
+    USERS ||--o{ BATCH_RESULTS : linked_to
