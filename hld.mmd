@@ -1,0 +1,93 @@
+flowchart TD
+
+%% =========================
+%% CLIENT LAYER
+%% =========================
+
+subgraph Client_Layer
+    A[Web Dashboard<br/>React + Tailwind]
+end
+
+%% =========================
+%% API LAYER
+%% =========================
+
+subgraph API_Layer
+    B[FastAPI REST API]
+end
+
+A --> B
+
+%% =========================
+%% BACKEND SERVICES
+%% =========================
+
+subgraph Backend_Services
+    C1[Authentication Service<br/>JWT Based]
+    C2[Expense Service<br/>Manual Entry]
+    C3[CSV Batch Processing Service]
+    C4[Dashboard Analytics Service]
+    C5[Forecast Service<br/>Overspending Risk]
+    C6[Fraud Detection Service]
+end
+
+B --> C1
+B --> C2
+B --> C3
+B --> C4
+B --> C5
+B --> C6
+
+%% =========================
+%% ML LAYER
+%% =========================
+
+subgraph ML_Layer
+    D1[Feature Engineering Pipeline]
+    D2[Expense Classification Model<br/>Logistic Regression / Random Forest]
+    D3[Isolation Forest Model<br/>Anomaly Detection]
+    D4[LSTM Model<br/>Monthly Forecasting]
+end
+
+C2 --> D1
+C3 --> D1
+
+D1 --> D2
+D1 --> D3
+D1 --> D4
+
+D2 --> C2
+D3 --> C6
+D4 --> C5
+
+%% =========================
+%% DATA LAYER
+%% =========================
+
+subgraph Data_Layer
+    E[(PostgreSQL Database<br/>Users, Transactions, Forecasts)]
+    F[(Stored ML Models<br/>.pkl / PyTorch Weights)]
+end
+
+C1 --> E
+C2 --> E
+C3 --> E
+C4 --> E
+C5 --> E
+C6 --> E
+
+D2 --> F
+D3 --> F
+D4 --> F
+
+%% =========================
+%% DEPLOYMENT LAYER
+%% =========================
+
+subgraph Deployment_Infrastructure
+    G[Docker Container]
+    H[AWS EC2 Instance]
+end
+
+B --> G
+G --> H
