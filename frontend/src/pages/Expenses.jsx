@@ -40,13 +40,21 @@ export default function Expenses() {
     if (!csvFile) { setCsvError('Please select a CSV file'); return }
     setCsvLoading(true); setCsvError('')
     try {
+      const parseCsvLine = (line) => (
+        line
+          .split(/,(?=(?:(?:[^\"]*\"){2})*[^\"]*$)/)
+          .map((v) => v.trim().replace(/^\"|\"$/g, ''))
+      )
+
       const text    = await csvFile.text()
-      const lines   = text.trim().split('\n')
-      const headers = lines[0].split(',').map(h => h.trim())
+      const lines   = text.trim().split(/\r?\n/).filter(Boolean)
+      if (lines.length < 2) throw new Error('CSV must include header + at least one row')
+
+      const headers = parseCsvLine(lines[0])
       const rows    = lines.slice(1).map(line => {
-        const vals = line.split(',')
+        const vals = parseCsvLine(line)
         const obj  = {}
-        headers.forEach((h, i) => obj[h] = vals[i]?.trim())
+        headers.forEach((h, i) => { obj[h] = vals[i]?.trim() })
         return {
           amount:       +obj.amount || 0,
           freight:      +obj.freight || 0,
@@ -58,7 +66,7 @@ export default function Expenses() {
       })
       const { data } = await batchUpload(rows)
       setCsvResults(data.results)
-    } catch (e) { setCsvError('CSV upload failed. Check file format.') }
+    } catch (e) { setCsvError(e.response?.data?.detail || e.message || 'CSV upload failed. Check file format.') }
     finally { setCsvLoading(false) }
   }
 

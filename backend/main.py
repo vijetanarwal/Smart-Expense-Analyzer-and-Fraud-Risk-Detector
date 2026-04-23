@@ -196,6 +196,27 @@ class CSVRow(BaseModel):
     description: Optional[str] = None
     created_at: Optional[str] = None
 
+
+def parse_csv_date(value: Optional[str]) -> datetime:
+    """Parse common CSV date formats; fallback to now."""
+    if not value:
+        return datetime.utcnow()
+    raw = str(value).strip()
+    if not raw:
+        return datetime.utcnow()
+
+    for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            pass
+
+    # Handle ISO-like values, including trailing Z.
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        raise HTTPException(400, f"Invalid created_at format: {value}")
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 @app.post("/auth/signup", status_code=201)
 def signup(body: SignupIn, db: Session = Depends(get_db)):
@@ -289,7 +310,7 @@ def batch_classify(rows: List[CSVRow], user: User = Depends(get_current_user), d
             raw        = fp["model"].decision_function(fp["scaler"].transform(ff))
             risk_score = float(max(0.0, min(1.0, (-raw[0] - fp["score_min"]) / (fp["score_max"] - fp["score_min"] + 1e-9))))
             risk_label = "high" if risk_score > 0.7 else "medium" if risk_score > 0.4 else "low"
-        txn_date = datetime.strptime(row.created_at, '%Y-%m-%d') if row.created_at else datetime.utcnow()
+        txn_date = parse_csv_date(row.created_at)
         db.add(Transaction(user_id=user.id, amount=row.amount, freight=row.freight,
                            payment_type=row.payment_type, installments=row.installments,
                            category=category, risk_score=risk_score, risk_label=risk_label,
