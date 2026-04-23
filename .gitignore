@@ -1,0 +1,18 @@
+## Python
+__pycache__/
+*.pyc
+.env
+
+## Frontend
+frontend/node_modules/
+frontend/dist/
+
+## Local tool/worktree folders
+.claude/
+
+## Legacy outputs (no longer required in runtime)
+outputs/
+
+## OS/editor
+.DS_Store
+Thumbs.db
