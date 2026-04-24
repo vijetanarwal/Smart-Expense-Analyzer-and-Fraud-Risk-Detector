@@ -104,6 +104,7 @@ def load_models():
     except Exception as e:
         print(f"Model load warning: {e}")
     _load_lstm(models)
+    print("Loaded models:", list(models.keys()))
     return models
 
 ML = load_models()
@@ -249,7 +250,8 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
 # ── ML Endpoints ──────────────────────────────────────────────────────────────
 @app.post("/classify")
 def classify(body: TransactionIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if "classifier" not in ML: raise HTTPException(503, "Classifier not loaded")
+    if "classifier" not in ML:
+        return {"message": "Classifier not available"}
     clf      = ML["classifier"]; pipeline = clf["pipeline"]; le = clf["label_encoder"]
     features = build_clf_features(body.amount, body.freight, body.payment_type, body.installments)
     n        = pipeline.n_features_in_ if hasattr(pipeline, "n_features_in_") else features.shape[1]
@@ -265,10 +267,14 @@ def classify(body: TransactionIn, user: User = Depends(get_current_user), db: Se
 
 @app.post("/fraud-score")
 def fraud_score(body: TransactionIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if "fraud" not in ML: raise HTTPException(503, "Fraud model not loaded")
+    if "fraud" not in ML:
+        return {"message": "Fraud model not available"}
     fp       = ML["fraud"]
     features = build_fraud_features(body.amount, body.freight, body.payment_type, body.installments)
-    raw      = fp["model"].decision_function(fp["scaler"].transform(features))
+    try:
+        raw  = fp["model"].decision_function(fp["scaler"].transform(features))
+    except Exception as e:
+        return {"error": "Fraud model failed", "details": str(e)}
     risk     = float((-raw[0] - fp["score_min"]) / (fp["score_max"] - fp["score_min"] + 1e-9))
     risk     = max(0.0, min(1.0, risk))
     label    = "high" if risk > 0.7 else "medium" if risk > 0.4 else "low"
