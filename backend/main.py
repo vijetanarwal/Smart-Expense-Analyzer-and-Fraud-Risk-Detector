@@ -182,11 +182,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         raise HTTPException(401, "Invalid token")
 
 def build_clf_features(amount, freight, payment_type, installments):
-    log_price  = np.log1p(amount)
-    frt_ratio  = freight / (amount + 1e-6)
-    pay_enc    = [1 if payment_type == p else 0 for p in ["boleto","credit_card","debit_card","voucher"]]
-    return np.array([[log_price, np.log1p(freight), np.log1p(amount+freight),
-                      frt_ratio, amount/max(installments,1), installments, 12, 2, 6, 0, 0.01] + pay_enc])
+    log_amount = np.log1p(amount)
+    log_freight = np.log1p(freight)
+    total = amount + freight
+    ratio = freight / (amount + 1e-6)
+    pay_enc = [1 if payment_type == p else 0 for p in ["boleto", "credit_card", "debit_card", "voucher"]]
+    return np.array([[amount, freight, installments, log_amount, log_freight, np.log1p(total), ratio] + pay_enc])
 
 def build_fraud_features(amount, freight, payment_type, installments, mean=100, std=80):
     price_z   = (amount - mean) / (std + 1e-6)
