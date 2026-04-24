@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: 'https://expense-backend-c63k.onrender.com' })
 
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('token')
