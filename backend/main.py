@@ -22,11 +22,11 @@ import jwt, bcrypt
 # ── Config ────────────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/expense_db")
 SECRET_KEY   = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-BASE_DIR     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR    = os.path.join(BASE_DIR, "models")
 
 # ── Database ──────────────────────────────────────────────────────────────────
-engine       = create_engine(DATABASE_URL)
+engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine)
 Base         = declarative_base()
 
@@ -54,7 +54,11 @@ class Transaction(Base):
     created_at   = Column(DateTime, default=datetime.utcnow)
     user         = relationship("User", back_populates="transactions")
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("DB connected successfully")
+except Exception as e:
+    print("DB connection failed:", e)
 
 # ── Load ML Models ────────────────────────────────────────────────────────────
 def _load_lstm(models):
