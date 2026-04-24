@@ -23,7 +23,15 @@ import jwt, bcrypt
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/expense_db")
 SECRET_KEY   = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR    = os.path.join(os.path.dirname(BASE_DIR), "models")
+
+# go to project root
+ROOT_DIR     = os.path.dirname(BASE_DIR)
+
+MODEL_DIR    = os.path.join(ROOT_DIR, "models")
+
+print("BASE_DIR:", BASE_DIR)
+print("MODEL_DIR:", MODEL_DIR)
+print("FILES IN MODEL_DIR:", os.listdir(MODEL_DIR) if os.path.exists(MODEL_DIR) else "NOT FOUND")
 
 # ── Database ──────────────────────────────────────────────────────────────────
 engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -38,7 +46,6 @@ class User(Base):
     password     = Column(String, nullable=False)
     created_at   = Column(DateTime, default=datetime.utcnow)
     transactions = relationship("Transaction", back_populates="user")
-
 class Transaction(Base):
     __tablename__ = "transactions"
     id           = Column(Integer, primary_key=True, index=True)
@@ -89,22 +96,37 @@ def _load_lstm(models):
 
 def load_models():
     models = {}
-    try:
-        clf = joblib.load(os.path.join(MODEL_DIR, "expense_classifier.pkl"))
-    except Exception:
-        clf = None
 
-    if clf is not None:
-        models["classifier"] = clf
+    # ---- Classifier ----
+    clf_path = os.path.join(MODEL_DIR, "expense_classifier.pkl")
+    if os.path.exists(clf_path):
+        try:
+            models["classifier"] = joblib.load(clf_path)
+            print("✅ Classifier loaded")
+        except Exception as e:
+            print("❌ Classifier load failed:", e)
+    else:
+        print("⚠️ Classifier not found")
 
+    # ---- Fraud ----
+    fraud_path = os.path.join(MODEL_DIR, "isolation_forest.pkl")
+    if os.path.exists(fraud_path):
+        try:
+            with open(fraud_path, "rb") as f:
+                models["fraud"] = pickle.load(f)
+            print("✅ Fraud model loaded")
+        except Exception as e:
+            print("❌ Fraud load failed:", e)
+    else:
+        print("⚠️ Fraud model not found")
+
+    # ---- LSTM ----
     try:
-        with open(os.path.join(MODEL_DIR, "isolation_forest.pkl"), "rb") as f:
-            models["fraud"] = pickle.load(f)
-        print("ML models loaded")
+        _load_lstm(models)
     except Exception as e:
-        print(f"Model load warning: {e}")
-    _load_lstm(models)
-    print("Loaded models:", list(models.keys()))
+        print("❌ LSTM load failed:", e)
+
+    print("🔥 FINAL LOADED MODELS:", list(models.keys()))
     return models
 
 ML = load_models()
