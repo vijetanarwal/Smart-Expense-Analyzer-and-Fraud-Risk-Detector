@@ -4,6 +4,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os, pickle, math
+import joblib
 from collections import defaultdict, Counter
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -85,9 +86,15 @@ def _load_lstm(models):
 def load_models():
     models = {}
     try:
-        with open(f"{MODEL_DIR}/expense_classifier.pkl", "rb") as f:
-            models["classifier"] = pickle.load(f)
-        with open(f"{MODEL_DIR}/isolation_forest.pkl", "rb") as f:
+        clf = joblib.load(os.path.join(MODEL_DIR, "expense_classifier.pkl"))
+    except Exception:
+        clf = None
+
+    if clf is not None:
+        models["classifier"] = clf
+
+    try:
+        with open(os.path.join(MODEL_DIR, "isolation_forest.pkl"), "rb") as f:
             models["fraud"] = pickle.load(f)
         print("ML models loaded")
     except Exception as e:
