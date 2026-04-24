@@ -23,7 +23,7 @@ import jwt, bcrypt
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/expense_db")
 SECRET_KEY   = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR    = os.path.join(os.path.dirname(BASE_DIR), "models")
+MODEL_DIR    = os.path.join(BASE_DIR, "models")
 
 # ── Database ──────────────────────────────────────────────────────────────────
 engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
