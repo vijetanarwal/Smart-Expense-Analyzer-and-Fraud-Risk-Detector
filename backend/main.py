@@ -24,10 +24,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localho
 SECRET_KEY   = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 
-# go to project root
-ROOT_DIR     = os.path.dirname(BASE_DIR)
-
-MODEL_DIR    = os.path.join(ROOT_DIR, "models")
+MODEL_DIR    = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 
 print("BASE_DIR:", BASE_DIR)
 print("MODEL_DIR:", MODEL_DIR)
